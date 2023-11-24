@@ -199,25 +199,4 @@ int main()
 		}
 		fillMap(snake, snake_Length, &apple);
 		printf("----------------------------------------- \n");
-	}
-	
-	/*while (true)
-	{
-		
-		//DummyPot();
-		/*
-		if (!Read_PE3)
-			step('r');
-		else if (!Read_PB4)
-			step('d');
-		else if (!Read_PE7)
-			step('l');
-		else if (!Read_PE6)
-			step('u');
-
-		fillMap();
-		
-
-
-	*/
 }
