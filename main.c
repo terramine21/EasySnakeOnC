@@ -18,7 +18,6 @@ char c_Empty[8] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
 char c_Snake[8] = { 0x00, 0x00, 0x3C, 0x3C, 0x3C, 0x3C, 0x00, 0x00 };
 char c_Apple[8] = { 0x00, 0x3E, 0x3E, 0x7E, 0xFE, 0xA6, 0x3E, 0x00 };	
 
-
 enum cellTypes clr_map[8][16] = 
 {
 	{Wall, Wall, Wall, Wall, Wall, Wall, Wall, Wall, Wall, Wall, Wall, Wall, Wall, Wall, Wall, Wall},
@@ -57,7 +56,7 @@ spawApple(struct s_Cell* apple)
 	}
 }
 
-void drawBlock(int Y, int X, char* what) //what - по сути палка, тут надо либо делать такое дл¤ вадратов, либо более сложное
+void drawBlock(int Y, int X, char* what) //what - по сути палка, тут надо либо делать такое для квадратов, либо более сложное
 {
 	//LCD_page_set(Y);
 	for (size_t i = 0; i < 8; i++)
@@ -67,14 +66,13 @@ void drawBlock(int Y, int X, char* what) //what - по сути палка, ту
 	}
 }
 
-
 void fillMap(struct s_Cell* snake, size_t size, struct s_Cell *apple)
 {
 	for (int i = 1; i < 7; i++) //очищение, копирование карты
 		for (int j = 1; j < 15; j++)
 			m_map[i][j] = clr_map[i][j];
 
-	for (int i = 0; i < size; i++) //добавл¤ем змейку
+	for (int i = 0; i < size; i++) //добавляем змейку
 		m_map[snake[i].y][snake[i].x] = snake->cellType;
 
 	m_map[apple->y][apple->x] = apple->cellType;
@@ -85,13 +83,13 @@ void fillMap(struct s_Cell* snake, size_t size, struct s_Cell *apple)
 			switch (m_map[Y][X])
 			{
 			case Wall:
-				drawBlock(Y, X, 0xff); break;
+				drawBlock(Y, X, c_Wall); break;
 			case Snake:
-				drawBlock(Y, X, 0xff); break;
+				drawBlock(Y, X, c_Snake); break;
 			case Apple:
-				drawBlock(Y, X, 0xff); break;
+				drawBlock(Y, X, c_Apple); break;
 			default:
-				drawBlock(Y, X, 0x00); break;
+				drawBlock(Y, X, c_Empty); break;
 				break;
 			}
 			if (m_map[Y][X] == 1)
@@ -112,24 +110,23 @@ void repeatTail(struct s_Cell* snake, size_t size)
 	}
 }
 
-
 void step(struct s_Cell* snake, size_t size, char dir)
 {
 	snake[0].prevX = snake[0].x;
 	snake[0].prevY = snake[0].y;
-	if (dir == 'r') //ѕ≈–≈ƒ≈Ћј“№  Ќќѕ ”!!!!!
+	if (dir == 'r') //ПЕРЕДЕЛАТЬ КНОПКУ!!!!!
 	{
 		snake[0].x = snake[0].x + 1;
 	}
-	else if (dir == 'l') //ѕ≈–≈ƒ≈Ћј“№  Ќќѕ ”!!!!!
+	else if (dir == 'l') //ПЕРЕДЕЛАТЬ КНОПКУ!!!!!
 	{
 		snake[0].x = snake[0].x - 1;
 	}
-	else if (dir == 'u') //ѕ≈–≈ƒ≈Ћј“№  Ќќѕ ”!!!!!
+	else if (dir == 'u') //ПЕРЕДЕЛАТЬ КНОПКУ!!!!!
 	{
 		snake[0].y = snake[0].y - 1;
 	}
-	else if (dir == 'd') //ѕ≈–≈ƒ≈Ћј“№  Ќќѕ ”!!!!!
+	else if (dir == 'd') //ПЕРЕДЕЛАТЬ КНОПКУ!!!!!
 	{
 		snake[0].y = snake[0].y + 1;
 	}
@@ -199,4 +196,5 @@ int main()
 		}
 		fillMap(snake, snake_Length, &apple);
 		printf("----------------------------------------- \n");
+	}
 }
