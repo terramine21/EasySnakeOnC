@@ -231,22 +231,12 @@ void step(struct s_Cell* snake, size_t size, char dir)
 }
 
 //ИЗБАВЛЯЮСЬ!?
-enum CellType doAction(struct s_Cell* snake, size_t* size, struct s_Cell* apple)
+void eatApple(struct s_Cell* snake, size_t* size, struct s_Cell* apple)
 {
-	switch (m_map[snake[0].y][snake[0].x])
-	{
-	case Empty: break;
-	case Wall: return Wall; break;
-	case Snake: return Snake; break;
-	case Apple: 
-		snake[*size].x = snake[*size - 1].x;
-		snake[*size].y = snake[*size - 1].y;
-		*size += 1; 
-		spawnApple(apple);
-		return Apple; break;
-	default:
-		break;
-	}
+	snake[*size].x = snake[*size - 1].x;
+	snake[*size].y = snake[*size - 1].y;
+	*size += 1; 
+	spawnApple(apple);
 }
 //ИЗБАВЛЯЮСЬ!?
 
@@ -298,7 +288,7 @@ enum State  stateNewGame( bool start)
 }
 void stateStandart(struct s_Cell* snake, size_t *size, struct s_Cell* apple, char *dir)
 {
-	switch (doAction(snake, &size, &apple))
+	switch (m_map[snake[0].y][snake[0].x])
 	{
 	case Wall:
 		return Death;
@@ -319,7 +309,7 @@ void stateStandart(struct s_Cell* snake, size_t *size, struct s_Cell* apple, cha
 	{
 		//sec_counter = 0;
 		step(snake, size, dir);
-		//state = doAction(snake, &snake_Length, &apple);
+		if(m_map[snake[0].y][snake[0].x] == Apple) eatApple(snake, size, apple);
 		fillMap(snake, size, &apple);
 	}
 	break;
