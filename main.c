@@ -4,10 +4,12 @@
 //#include "milkites_delay.h" // подключение библиотеки задержек
 //#include "milkites_display.h" // подключение библиотеки дисплея
 //#include "pwm_step_motor.h"
+#define _CRT_SECURE_NO_WARNINGS
 #include "stdbool.h"
 #include <stdio.h>
 #include <stdlib.h>
 
+#define baseL 84
 /*------------------------------------------------------------*/
 //#define LCD_led_en MDR_PORTE->RXTX |= (1<<2) // вкл. подсветки
 //#define LCD_led_dis MDR_PORTE->RXTX &= ~(1<<2) // выкл. подсветки
@@ -113,6 +115,7 @@ struct s_Cell //по сути змейка
 	enum CellType cellType;
 };
 
+
 char c_Wall[8] =		{ 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff }; //графика
 char c_Empty[8] =		{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
 char c_Snake[8] =		{ 0x00, 0x00, 0x3C, 0x3C, 0x3C, 0x3C, 0x00, 0x00 };
@@ -173,7 +176,7 @@ void fillMap(struct s_Cell* snake, size_t size, struct s_Cell *apple) //ТОЛЬ
 			m_map[i][j] = clr_map[i][j];
 
 	for (int i = 0; i < size; i++) //добавляем змейку
-		m_map[snake[i].y][snake[i].x] = snake->cellType;
+		m_map[snake[i].y][snake[i].x] = snake[i].cellType;
 
 	m_map[apple->y][apple->x] = apple->cellType;
 
@@ -207,6 +210,7 @@ void repeatTail(struct s_Cell* snake, size_t size)
 		snake[i].y = snake[i - 1].prevY;
 	}
 }
+
 void step(struct s_Cell* snake, size_t size, char dir)
 {
 	snake[0].prevX = snake[0].x;
@@ -284,8 +288,19 @@ enum State  stateNewGame( bool start)
 	if (start) return Restart;
 	else NewGame;
 }
-void stateStandart(struct s_Cell* snake, size_t *size, struct s_Cell* apple, char *dir)
+enum State stateStandart(struct s_Cell* snake, size_t *size, struct s_Cell* apple, char *dir)
 {
+	//MCU_ADC_set_ch(4);
+	//ch_4_counts = MCU_ADC_read() - 38;
+
+	//if(!Read_PB4) *dir = 'd';
+	//else if(!Read_PE6) *dir = 'u';
+	//else if(!Read_PE7) *dir = 'l';
+	//else if(!Read_PE3) *dir = 'r';
+	//else;
+	//if(sec_counter > ch_4_counts)
+	step(snake, *size, *dir);
+
 	switch (m_map[snake[0].y][snake[0].x])
 	{
 	case Wall:
@@ -294,24 +309,17 @@ void stateStandart(struct s_Cell* snake, size_t *size, struct s_Cell* apple, cha
 	case Snake:
 		return Death;
 		break;
-	default:
-		//MCU_ADC_set_ch(4);
-		//ch_4_counts = MCU_ADC_read() - 38;
-
-		//if(!Read_PB4) *dir = 'd';
-		//else if(!Read_PE6) *dir = 'u';
-		//else if(!Read_PE7) *dir = 'l';
-		//else if(!Read_PE3) *dir = 'r';
-		//else;
-		//if(sec_counter > ch_4_counts)
-	{
-		//sec_counter = 0;
-		step(snake, size, dir);
-		if(m_map[snake[0].y][snake[0].x] == Apple) eatApple(snake, size, apple);
-		fillMap(snake, size, &apple);
+	case Apple:
+		eatApple(snake, size, apple);
+		fillMap(snake, *size, apple);
+		return Standard;
+		break;
+	default:	
+		fillMap(snake, *size, apple);
+		return Standard;
+		break;
 	}
-	break;
-	}
+	return Standard;
 }
 enum State stateGameOver(size_t score, bool start)
 {
@@ -326,10 +334,10 @@ enum State stateGameOver(size_t score, bool start)
 	if (start) return Restart;
 	else Death;
 }
-void stateRestart(struct s_Cell* snake, size_t size, struct s_Cell* apple)
+void stateRestart(struct s_Cell* snake, size_t *size, struct s_Cell* apple)
 {
-	size = 3;
-	for (size_t i = 0; i < size; i++)
+	*size = 3;
+	for (size_t i = 0; i < baseL; i++)
 	{
 		snake[i].x = 5;
 		snake[i].y = 2;
@@ -377,15 +385,14 @@ int main()
 	struct s_Cell snake[85];
 
 	struct s_Cell apple; 
-	apple.x = 1; apple.y = 1; apple.cellType = Apple;
-	spawnApple(&apple);
-	fillMap(snake, snake_Length, &apple);
-	char dir = 'd'; //в проекте убрать иль нет, хммммммммммммм
+
+
+	char dir = 'r'; //в проекте убрать иль нет, хммммммммммммм
 	
 	enum State state = NewGame;
 	enum CellType gameState;
 	
-					float ch_4_counts = 0;
+	float ch_4_counts = 0;
 	
 //setub end
 	while (true)
@@ -396,20 +403,35 @@ int main()
 			if(stateNewGame(true) == Restart) state = Restart; //заменить true (!Read_PB4)||(!Read_PE6)||(!Read_PE7)||(!Read_PE3)
 			break;
 		case Standard:
-			stateStandart(snake, &snake_Length, &apple, &dir);
+			state = stateStandart(snake, &snake_Length, &apple, &dir);
 			break;
 
 		case Death:
 			if(stateGameOver(snake_Length - 3, true) == Restart) state = Restart; //заменить 3 на переменную, true на (!Read_PB4)||(!Read_PE6)||(!Read_PE7)||(!Read_PE3)
 			break;
 		case Restart:
-			stateRestart(snake, snake_Length, &apple);
+			stateRestart(snake, &snake_Length, &apple);
 			state = Standard;
 			//REinit
 			break;
 		default:
 			break;
 		}
+
+		for (size_t i = 0; i < 8; i++)
+		{
+			for (size_t j = 0; j < 16; j++)
+			{
+				printf("%d", m_map[i][j]);
+			}
+			printf("\n");
+		}
+		printf("\n");
+		dir = getchar(); //заменить на 
+		//if (!Read_PE3)
+		//	step('r');
+		getchar(); //костыль против enter
+
 	}
 	return 0;
 }
