@@ -104,7 +104,7 @@
 
 
 enum CellType { Empty, Wall, Snake, SnakeHead, Apple, };
-enum State { NewGame, Standart, Death, Restart};
+enum State { NewGame, Standard, Death, Restart};
 
 struct s_Cell //по сути змейка
 {
@@ -275,7 +275,7 @@ enum CellType doAction(struct s_Cell* snake, size_t* size, struct s_Cell* apple)
 //}
 
 
-void stateNewGame(enum State* m_state, bool start)
+enum State  stateNewGame( bool start)
 {
 	//LCD_set_cursor(1);
 	//LCD_column_set(8*6);
@@ -293,14 +293,39 @@ void stateNewGame(enum State* m_state, bool start)
 	//LCD_set_cursor(7);
 	//LCD_print_text("PRESS ANY BUTTON");
 	//delay_ms(20);
-	if (start) m_state = Standart;
+	if (start) return Restart;
+	else NewGame;
 }
-void stateStandart(struct s_Cell* snake, size_t size, struct s_Cell* apple, char dir)
+void stateStandart(struct s_Cell* snake, size_t *size, struct s_Cell* apple, char *dir)
 {
-	step(snake, size, dir);
-	fillMap(snake, size, &apple);
+	switch (doAction(snake, &size, &apple))
+	{
+	case Wall:
+		return Death;
+		break;
+	case Snake:
+		return Death;
+		break;
+	default:
+		//MCU_ADC_set_ch(4);
+		//ch_4_counts = MCU_ADC_read() - 38;
+
+		//if(!Read_PB4) *dir = 'd';
+		//else if(!Read_PE6) *dir = 'u';
+		//else if(!Read_PE7) *dir = 'l';
+		//else if(!Read_PE3) *dir = 'r';
+		//else;
+		//if(sec_counter > ch_4_counts)
+	{
+		//sec_counter = 0;
+		step(snake, size, dir);
+		//state = doAction(snake, &snake_Length, &apple);
+		fillMap(snake, size, &apple);
+	}
+	break;
+	}
 }
-void stateGameOver(enum State* m_state, enum CellType gameState, size_t score, bool start)
+enum State stateGameOver(size_t score, bool start)
 {
 	//LCD_set_cursor(3);
 	//LCD_column_set(8*6);
@@ -310,9 +335,10 @@ void stateGameOver(enum State* m_state, enum CellType gameState, size_t score, b
 	//LCD_print_text("Your score is: ");
 	//LCD_print_num(score);
 	//delay_ms(10000);
-	if (start) *m_state = Restart;
+	if (start) return Restart;
+	else Death;
 }
-void stateRestart(enum State* m_state, struct s_Cell* snake, size_t size, struct s_Cell* apple)
+void stateRestart(struct s_Cell* snake, size_t size, struct s_Cell* apple)
 {
 	size = 3;
 	for (size_t i = 0; i < size; i++)
@@ -327,7 +353,6 @@ void stateRestart(enum State* m_state, struct s_Cell* snake, size_t size, struct
 
 	apple->x = 1; apple->y = 1; apple->cellType = Apple;
 	spawnApple(apple);
-	*m_state = Standart;
 }
 
 int main()
@@ -380,44 +405,18 @@ int main()
 		switch (state)
 		{
 		case NewGame:
-			stateNewGame(&state, true); //заменить true (!Read_PB4)||(!Read_PE6)||(!Read_PE7)||(!Read_PE3)
+			if(stateNewGame(true) == Restart) state = Restart; //заменить true (!Read_PB4)||(!Read_PE6)||(!Read_PE7)||(!Read_PE3)
 			break;
-		case Standart:
-
-			switch (doAction(snake, &snake_Length, &apple))
-			{
-			case Wall:
-				state = Death;
-				break;
-			case Snake:
-				state = Death;
-				break;
-			default:
-				//MCU_ADC_set_ch(4);
-				//ch_4_counts = MCU_ADC_read() - 38;
-
-				//if(!Read_PB4) dir = 'd';
-				//else if(!Read_PE6) dir = 'u';
-				//else if(!Read_PE7) dir = 'l';
-				//else if(!Read_PE3) dir = 'r';
-				//else;
-				//if(sec_counter > ch_4_counts)
-					{
-						//sec_counter = 0;
-						step(snake, snake_Length, dir);
-						//state = doAction(snake, &snake_Length, &apple);
-						fillMap(snake, snake_Length, &apple);
-					}
-			break;
-			}
+		case Standard:
+			stateStandart(snake, &snake_Length, &apple, &dir);
 			break;
 
 		case Death:
-			stateGameOver(state, gameState, snake_Length - 3, true); //заменить 3 на переменную, true на (!Read_PB4)||(!Read_PE6)||(!Read_PE7)||(!Read_PE3)
+			if(stateGameOver(snake_Length - 3, true) == Restart) state = Restart; //заменить 3 на переменную, true на (!Read_PB4)||(!Read_PE6)||(!Read_PE7)||(!Read_PE3)
 			break;
 		case Restart:
-			stateRestart(&state, snake, snake_Length, &apple);
-
+			stateRestart(snake, snake_Length, &apple);
+			state = Standard;
 			//REinit
 			break;
 		default:
