@@ -230,7 +230,6 @@ void step(struct s_Cell* snake, size_t size, char dir)
 	repeatTail(snake, size);
 }
 
-//ИЗБАВЛЯЮСЬ!?
 void eatApple(struct s_Cell* snake, size_t* size, struct s_Cell* apple)
 {
 	snake[*size].x = snake[*size - 1].x;
@@ -238,7 +237,6 @@ void eatApple(struct s_Cell* snake, size_t* size, struct s_Cell* apple)
 	*size += 1; 
 	spawnApple(apple);
 }
-//ИЗБАВЛЯЮСЬ!?
 
 //uint16_t sec_counter = 0; // переменная-счетчик секунд
 //void Timer1_init(void)
