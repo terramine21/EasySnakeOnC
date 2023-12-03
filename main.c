@@ -74,7 +74,7 @@ enum CellType m_map[8][16] =
 
 
 void drawBlock(int Y, int X, char* what); //what - по сути палка, тут надо либо делать такое для квадратов, либо более сложное
-void fillMap(struct s_Cell* snake, size_t size, struct s_Cell* apple); //ТОЛЬКО ПЕРЕРИСОВКА КАРТЫ!
+void drawMap(struct s_Cell* snake, size_t size, struct s_Cell* apple); //ТОЛЬКО ПЕРЕРИСОВКА КАРТЫ!
 
 void repeatTail(struct s_Cell* snake, size_t size);
 void step(struct s_Cell* snake, size_t size, char dir);
@@ -182,7 +182,7 @@ void drawBlock(int Y, int X, char* what) //what - по сути палка, ту
 		//LCD_wr_byte(what[i]);
 	}
 }
-void fillMap(struct s_Cell* snake, size_t size, struct s_Cell* apple) //ТОЛЬКО ПЕРЕРИСОВКА КАРТЫ!
+void drawMap(struct s_Cell* snake, size_t size, struct s_Cell* apple) //ТОЛЬКО ПЕРЕРИСОВКА КАРТЫ!
 {
 	for (int i = 1; i < 7; i++) //очищение, копирование карты
 		for (int j = 1; j < 15; j++)
@@ -321,12 +321,12 @@ enum State stateStandart(struct s_Cell* snake, size_t* size, struct s_Cell* appl
 			break;
 		case Apple:
 			eatApple(snake, size, apple);
-			fillMap(snake, *size, apple);
+			drawMap(snake, *size, apple);
 			if (size >= baseL - 1) return Win;
 			else return Standard;
 			break;
 		default:
-			fillMap(snake, *size, apple);
+			drawMap(snake, *size, apple);
 			return Standard;
 			break;
 		}
@@ -365,7 +365,7 @@ void stateRestart(struct s_Cell* snake, size_t* size, struct s_Cell* apple)
 	apple->cellType = Apple;
 	spawnApple(apple);
 
-	fillMap(snake, *size, apple);
+	drawMap(snake, *size, apple);
 
 }
 enum State stateWin(size_t score, bool start)
