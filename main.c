@@ -9,20 +9,20 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define baseL 84
-#define startSize 83
+#define baseL 84		//победа
+#define startSize 5		//стартовая длина
 int HighScore = 0; //мне впадлу уже нормально делать
 /*------------------------------------------------------------*/
 //#define LCD_led_en MDR_PORTE->RXTX |= (1<<2) // вкл. подсветки
 //#define LCD_led_dis MDR_PORTE->RXTX &= ~(1<<2) // выкл. подсветки
 /*------------------------------------------------------------*/
-//кнопочки
+//кнопки
 //#define PE7  1 << 7
-//#define PB4  1 << 4																					// bit of the button PB4
-//#define PB5  0xff																						// bit of the SENSOR
-//#define PE7  1 << 7																					// bit of the button PE7
-//#define PE6  1 << 6																					// bit of the button PE6
-//#define PE3  1 << 3																					// bit of the button PE3
+//#define PB4  1 << 4															// bit of the button PB4
+//#define PB5  0xff																// bit of the SENSOR
+//#define PE7  1 << 7															// bit of the button PE7
+//#define PE6  1 << 6															// bit of the button PE6
+//#define PE3  1 << 3															// bit of the button PE3
 //#define Read_PB4 (MDR_PORTB->RXTX & PB4)										// Reading pin PB4
 //#define Read_PE3 (MDR_PORTE->RXTX & PE3)										// Reading pin PE3
 //#define Read_PB5 (MDR_PORTB->RXTX & PB5)										// Reading pin PB5
@@ -36,7 +36,7 @@ int HighScore = 0; //мне впадлу уже нормально делать
 enum CellType { Empty, Wall, Snake, SnakeHead, Apple, };
 enum State { NewGame, Standard, Death, Restart, Win};
 
-struct s_Cell //по сути змейка
+struct s_Cell
 {
 	int		y, x;
 	int prevY, prevX;
@@ -73,74 +73,67 @@ enum CellType m_map[8][16] =
 };
 
 
-void drawBlock(int Y, int X, char* what); //what - по сути палка, тут надо либо делать такое для квадратов, либо более сложное
-void drawMap(struct s_Cell* snake, size_t size, struct s_Cell* apple); //ТОЛЬКО ПЕРЕРИСОВКА КАРТЫ!
+void drawBlock(int Y, int X, char* what);										//отрисовка клетки на дисплее
+void drawMap(struct s_Cell* snake, size_t size, struct s_Cell* apple);			//заполнение карты
 
-void repeatTail(struct s_Cell* snake, size_t size);
-void step(struct s_Cell* snake, size_t size, char dir);
+void repeatTail(struct s_Cell* snake, size_t size);								//повторить шаг для хвоста
+void step(struct s_Cell* snake, size_t size, char dir);							//перемещение головы змейки
 
-void spawnApple(struct s_Cell* apple);
-void eatApple(struct s_Cell* snake, size_t* size, struct s_Cell* apple);
+void spawnApple(struct s_Cell* apple);											//переместить яблоко
+void eatApple(struct s_Cell* snake, size_t* size, struct s_Cell* apple);		//событие - съесть яблоко
 
-//uint16_t sec_counter = 0; // переменная-счетчик секунд
+//int sec_counter = 0;															//переменная-счетчик секунд
 //void Timer1_init(void);
 //void Timer1_IRQHandler(void);
-//void Timer1_start(void); // команда запуска Таймера 1
+//void Timer1_start(void);														//команда запуска Таймера 1
 
-
-enum State stateNewGame(bool start);
-enum State stateStandart(struct s_Cell* snake, size_t* size, struct s_Cell* apple, char* dir);
-enum State stateGameOver(size_t score, bool start);
-void stateRestart(struct s_Cell* snake, size_t* size, struct s_Cell* apple);
-enum State stateWin(size_t score, bool start);
+enum State stateNewGame(bool start);											//состояние начала игры
+enum State stateStandart(struct s_Cell* snake, size_t* size, struct s_Cell* apple, char* dir); //событие обычной игры
+enum State stateGameOver(size_t score, bool start);								//событие проигрыша игры
+void stateRestart(struct s_Cell* snake, size_t* size, struct s_Cell* apple);	//событие рестарта
+enum State stateWin(size_t score, bool start);									//событие победа
 
 int main()
 {
 //setub
-	////куча бесполезных инициализаций
 	//MDR_RST_CLK->PER_CLOCK = 0xffffffff; 
-	//MDR_PORTA->OE = 0xffff; // настройка PORTA на выход
-	//MDR_PORTA->FUNC = 0x0000; // функция - порт, основная функция
-	//MDR_PORTA->PWR = 0xffff; // максимально быстрый фронт
-	//MDR_PORTA->ANALOG = 0xffff; // режим работы - цифровой ввод/вывод
-	//MDR_PORTA->RXTX = 0x0000; // запись числа 255 для включения
+	//MDR_PORTA->OE = 0xffff;						// настройка PORTA на выход
+	//MDR_PORTA->FUNC = 0x0000;					// функция - порт, основная функция
+	//MDR_PORTA->PWR = 0xffff;					// максимально быстрый фронт
+	//MDR_PORTA->ANALOG = 0xffff;				// режим работы - цифровой ввод/вывод
+	//MDR_PORTA->RXTX = 0x0000;						// запись числа 255 для включения
 	//
-	//MDR_PORTB->FUNC = 0x0000; // функция - порт, основная функция
-	//MDR_PORTB->ANALOG = 0xffff; // режим работы - цифровой ввод/вывод
+	//MDR_PORTB->FUNC = 0x0000;						// функция - порт, основная функция
+	//MDR_PORTB->ANALOG = 0xffff;					// режим работы - цифровой ввод/вывод
 	//
-	//MDR_RST_CLK->PER_CLOCK = 0xffffffff; // вкл. тактирования периферии МК 
-	//MDR_PORTE->OE = 0xff37; // биты 7,6,3 PORTE - входы (кнопки), др. - выходы
-	//MDR_PORTE->FUNC = 0x0000; // функция - порт, основная функция
-	//MDR_PORTE->PWR = 0xff37; // макс. быстрый фронт
-	//MDR_PORTE->ANALOG = 0xffff; // режим работы порта - цифровой ввод/вывод
+	//MDR_RST_CLK->PER_CLOCK = 0xffffffff;			// вкл. тактирования периферии МК 
+	//MDR_PORTE->OE = 0xff37;						// биты 7,6,3 PORTE - входы (кнопки), др. - выходы
+	//MDR_PORTE->FUNC = 0x0000;						// функция - порт, основная функция
+	//MDR_PORTE->PWR = 0xff37;						// макс. быстрый фронт
+	//MDR_PORTE->ANALOG = 0xffff;					// режим работы порта - цифровой ввод/вывод
 	//
-	//delay_init(); // инициализация системы задержек
-	//LCD_init(); // инициализация дисплея
-	//LCD_clear(); // очистка дисплея
-	//LCD_led_en; // вкл. подсветки дисплея
+	//delay_init();									// инициализация системы задержек
+	//LCD_init();									// инициализация дисплея
+	//LCD_clear();									// первая очистка
+	//LCD_led_en;									// вкл. подсветки дисплея
 	//
-	//Timer1_init(); // инициализация Таймера 1
-	//NVIC_EnableIRQ(Timer1_IRQn); // разрешение прерывания от Таймера 1
-	//__enable_irq(); // глобальное разрешение прерываний
-	//Timer1_start(); // запуск Таймера 1
+	//Timer1_init();								// инициализация Таймера 1
+	//NVIC_EnableIRQ(Timer1_IRQn);					// разрешение прерывания от Таймера 1
+	//__enable_irq();								// глобальное разрешение прерываний
+	//Timer1_start();								// запуск Таймера 1
 	
-	size_t snake_Length = startSize;
-	struct s_Cell snake[85];
+	size_t snake_Length = startSize;				//стартовая длина змейки
+	struct s_Cell snake[85];						//змейка
+	struct s_Cell apple;							//яблоко
 
-	struct s_Cell apple; 
-
-
-	char dir = 'r'; //в проекте убрать иль нет, хммммммммммммм
+	char dir = 'r';									//направление
 	
-	enum State state = NewGame;
-	enum CellType gameState;
-	
-	int kek = 0;
+	enum State state = NewGame;						//определение стартового статуса
+	enum CellType gameState;						//инициализация статуса игры
 	
 //setub end
 	while (true)
 	{
-		kek++;
 		switch (state)
 		{
 		case NewGame:
